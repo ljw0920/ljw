@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="logindiv">
+    <form>
+        账号:<input type="text" v-model="account" required/><br>
+        密码:<input type="password" v-model="pwd" required/><br>
+        状态码:<input type="text" v-model="code" required/><br>
+        <input type="button" value="登录" @click="doLogin()" required/><br>
+    </form>
+    <br>
+    <input type="button" value="查看所有user" @click="getAllUser()" required/><br>
+    <table border="1">
+        <tr>
+            <th>序号</th>
+            <th>账号</th>
+            <th>密码</th>
+            <th>余额</th>
+            <th>注册时间</th>
+            <th>操作</th>
+        </tr>
+        <tr v-for="(user,index) in userList">
+            <td>{{index+1}}</td>
+            <td>{{user.userAccount}}</td>
+            <td>{{user.userPwd}}</td>
+            <td>{{user.balance}}</td>
+            <td>{{user.gmtCreate|dateFormat("YYYY-MM-DD")}}</td>
+            <td><a href="javascript:void(0)">删除</a></td>
+        </tr>
+    </table>
+</div>
+<script src="plugins/vue/vue.js"></script>
+<script src="plugins/axios/axios.js"></script>
+<script src="plugins/qs/qs.js"></script>
+<script src="plugins/moment/moment.js"></script>
+<script>
+
+    //moment.js 时间格式插件
+    //创建一个过滤器 解决数据库数据与页面想要显示的数据不同的问题
+    Vue.filter('dateFormat', function(str, partten){
+        return moment(str).format(partten);
+    })
+
+    var vm = new Vue({
+        el:"#logindiv",
+        data:{
+            account:'',
+            pwd:'',
+            code:'',
+            userList:''
+        },
+        methods:{
+            doLogin:function () {
+                axios({
+                   method:'post',
+                   url:'/doLoginMap',
+                   headers:{
+                       "Content-Type":"application/json;charset=utf-8"
+                   },
+                    data:JSON.stringify({"userAccount":this.account,"userPwd":this.pwd})
+                }).then(function (resp) {
+                    if(resp.data.code==200){
+                        alert("登录成功");
+                        vm.code = resp.data.message;
+                        //location.href = "index.html";
+                    }else {
+                        alert(resp.data.message);
+                    }
+                }).catch(function (error) {
+                    console.log(error);
+                })
+            },
+            getAllUser:function(){
+                axios({
+                    method:'post',
+                    url:'/getAllUser',
+                    headers:{
+                        "Content-Type":"application/json;charset=utf-8"
+                    },
+                    data:JSON.stringify({"userAccount":this.account})
+                }).then(function (resp) {
+                    if(resp.data.code==200){
+                        vm.userList = resp.data.data.itms;
+                    }else {
+                        alert(resp.data.message);
+                    }
+                }).catch(function (error) {
+                    console.log(error);
+                })
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
